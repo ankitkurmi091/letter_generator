@@ -1,0 +1,157 @@
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:letter_generator/Connectivity/DevHelp.dart';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
+import 'package:provider/provider.dart';
+import '../Providers/ProviderClass.dart';
+import '../main.dart';
+
+class SimpleWeb extends StatefulWidget {
+  const SimpleWeb({super.key});
+
+  @override
+  State<SimpleWeb> createState() => _SimpleWebState();
+}
+
+class _SimpleWebState extends State<SimpleWeb> {
+  DevHelp helpObj = DevHelp();
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+
+        final mapData = Provider.of<ProviderClassChange>(context, listen: false).mapC;
+        Future.delayed(Duration(milliseconds: 500));
+        final htmlContent = generateHtmlContent(mapData);
+
+        printHtml(htmlContent).then((_) {
+          Future.delayed(Duration(seconds: 1));
+          if (mounted) {
+            Navigator.pop(context, MaterialPageRoute(builder: (context) => LetterGenerator()));
+          }
+        });
+      } catch (e) {
+        // print("Error during printHtml or navigation: $e");
+        helpObj.sendMessageToTelegram("Error during creating pdf $e");
+        showToast('Error during creating pdf');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(''),
+      ),
+      body: Center(
+        child:Container(),
+      ),
+    );
+  }
+
+  String generateHtmlContent(Map<String, dynamic> mapData) {
+
+    mapData.putIfAbsent("temp", () => 't');
+
+    // Extract data with default values
+    String lNumber = mapData['lNumber'] ?? '';
+    String lDate = mapData['lDate'] ?? '';
+    String lName = mapData['lName'] ?? '';
+    String lAddress = mapData['lAddress'] ?? '';
+    String lSubject = mapData['lSubject'] ?? '';
+    String lBody = mapData['lBody'] ?? '';
+    String lReference1 = mapData['lReference1'] ?? '';
+    String lReference2 = mapData['lReference2'] ?? '';
+    String lReference3 = mapData['lReference3'] ?? '';
+    String lReference4 = mapData['lReference4'] ?? '';
+    String lSign = mapData['lSign'] ?? '';
+
+    String lRef1 = lReference1.isNotEmpty ? "1. $lReference1" : '';
+    String lRef2 = lReference2.isNotEmpty ? "2. $lReference2" : '';
+    String lRef3 = lReference3.isNotEmpty ? "3. $lReference3" : '';
+    String lRef4 = lReference4.isNotEmpty ? "4. $lReference4" : '';
+
+    // HTML content
+    return """
+    <html>
+        <head>
+          <title>Print Letter</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin-top: 50px; margin-left: 90px; margin-right: 90px; }
+            .letter-info { font-size: 11pt; margin-bottom: 10px; display: flex; justify-content: space-between; }
+            .letter-info .date { margin-left: auto; }
+            .address { margin-left: 40px; font-size: 11pt; margin-bottom: 20px; }
+            .subject { font-size: 11pt; margin-bottom: 10px; }
+            .body { font-size: 11pt; margin: 15px 0; text-align: justify; white-space: pre-line; }
+            .footer { font-size: 11pt; margin-top: 20px; text-align: right; }
+            .header { text-align: center; font-size: 19pt; font-weight: bold; margin-bottom: 48px; }
+            .footer-right { text-align: right; font-size: 11pt; }
+            .prati { font-size: 11pt; margin-bottom: 0; }
+            img { max-width: 100px; height: auto; }
+          </style>
+        </head>
+        <body>
+        <div style="height: 30px;"></div>
+
+          <div class="header">कार्यालय प्राचार्य शासकीय हाई स्कूल बारह (छोटा)</div>
+          <div class="letter-content">
+            <div class="letter-info">
+              <strong>क्रमांक - $lNumber</strong>
+              <span class="date"><strong>दिनांक - $lDate</strong></span>
+            </div>
+            <div class="prati">प्रति,</div>
+            <div class="address">$lName<br>$lAddress</div>
+            <div class="subject"><strong>विषय - </strong>$lSubject</div>
+            <div class="body"><strong>संदर्भ - </strong>$lBody</div>
+          </div>
+          <div style="text-align: left;"><strong>पृष्ठ क्रमांक - 1</strong></div>
+           <div style="height: 20px;"></div>
+          <div style=' margin-left:83%'>
+                ${lSign.isNotEmpty ? '<img src="data:image/png;base64,$lSign" alt="Sign"  style="height: 70px; width: 350px;">' : ''}
+              </div>
+          <div class="footer">
+            <div class="footer-right">
+              
+              <strong>प्राचार्य शासकीय हाई स्कूल</strong><br>
+              <strong>बारह (छोटा)</strong><br>
+              <strong>जिला- नरसिंहपुर</strong><br>
+              <strong>दिनांक - $lDate</strong>
+            </div>
+          </div> 
+          <div style="margin-top:30px">
+            <div>$lRef1</div>
+            <div>$lRef2</div>
+            <div>$lRef3</div>
+            <div>$lRef4</div>
+          </div>
+        </body>
+      </html>
+    """;
+  }
+
+  Future<void> printHtml(String htmlContent) async {
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async {
+        return await Printing.convertHtml(
+          format: format,
+          html: htmlContent,
+        );
+      },
+    );
+  }
+
+  void showToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      // backgroundColor: Colors.black,
+      textColor: Colors.black,
+      fontSize: 16.0,
+    );
+  }
+}

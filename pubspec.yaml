@@ -1,0 +1,49 @@
+name: letter_generator
+description: "Generate official letters"
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+#  sdk: '>=3.3.0 <4.0.0'
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  http:
+  provider:
+  pdf:
+  printing: ^5.13.4
+  intl:
+  image_picker: ^1.1.2
+  fluttertoast: ^8.2.10
+  internet_connection_checker: ^3.0.1
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: "^0.14.2"
+
+  flutter_lints: ^5.0.0
+
+
+flutter:
+
+  # the material Icons class.
+  uses-material-design: true
+#  uses-material-design: true
+  assets:
+    - assets/icons/
+
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/icon1.png"
+  adaptive_icon_foreground: "assets/icons/icon1.png"
+  adaptive_icon_background: "assets/icons/iconB1.png"
